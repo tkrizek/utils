@@ -1,0 +1,25 @@
+#!/bin/bash
+
+key_id="0x$1"
+
+personal_key="0xB2F27B7221DCD363"
+work_key="0xA1FBA5F7EF8C4869"
+
+gpg2 --keyserver pool.sks-keyservers.net --recv-keys "$key_id"
+gpg2 --fingerprint -k "$key_id"
+
+echo "Signing with: "
+gpg2 -k "$personal_key" | grep uid
+gpg2 -k "$work_key" | grep uid
+
+gpg2 --default-key "$personal_key" --sign-key "$key_id"
+gpg2 --default-key "$work_key" --sign-key "$key_id"
+
+gpg2 --list-sigs "$key_id"
+
+read -p "Send to keyserver[y/N]? " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+	gpg2 --keyserver pool.sks-keyservers.net --send-keys "$key_id"
+	gpg2 --armor --export "$key_id" > ~/gpg/to-email/$key_id.asc
+fi
